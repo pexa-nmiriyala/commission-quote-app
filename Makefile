@@ -82,10 +82,14 @@ docker-up: dev-down
 	@echo ""
 	@echo "Run 'make docker-logs' to tail logs."
 
-## Stop and remove containers
+## Stop and remove containers, and kill any host processes on ports 8080 and 5173
 docker-down:
 	@echo "Stopping Docker stack..."
 	docker compose down
+	@echo "Stopping any host processes on ports 8080 and 5173..."
+	@lsof -ti:8080 | xargs kill -9 2>/dev/null || true
+	@lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+	@echo "Done."
 
 ## Tail logs from all running containers
 docker-logs:
