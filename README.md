@@ -61,7 +61,7 @@ commission-quote-app/
 
 ### Prerequisites
 
-- Java 21, Node.js 20.19+ or 22.12+, Docker
+- Java 21, Node.js 20.19+ or 22.10+, Docker
 
 ### Environment variables
 

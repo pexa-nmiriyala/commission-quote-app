@@ -32,10 +32,10 @@ check-prereqs:
 	  MINOR=$$(echo $$NODE_VER | cut -d'.' -f2); \
 	  OK=0; \
 	  if [ "$$MAJOR" -eq 20 ] && [ "$$MINOR" -ge 19 ]; then OK=1; fi; \
-	  if [ "$$MAJOR" -eq 22 ] && [ "$$MINOR" -ge 12 ]; then OK=1; fi; \
+	  if [ "$$MAJOR" -eq 22 ] && [ "$$MINOR" -ge 10 ]; then OK=1; fi; \
 	  if [ "$$MAJOR" -gt 22 ]; then OK=1; fi; \
 	  if [ "$$OK" -eq 0 ]; then \
-	    echo "❌ Node.js 20.19+ or 22.12+ required, found v$$NODE_VER. Please upgrade."; exit 1; \
+	    echo "❌ Node.js 20.19+ or 22.10+ required, found v$$NODE_VER. Please upgrade."; exit 1; \
 	  else \
 	    echo "✅ Node.js v$$NODE_VER"; \
 	  fi

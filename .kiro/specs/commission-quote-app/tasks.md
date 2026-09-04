@@ -31,7 +31,6 @@ Implement the Commission Quote App as a React (Vite) frontend + Spring Boot (Kot
   - Create `server/src/main/resources/application.yml` with `server.port: 8080` and a placeholder `commission.api.url` property
   - Add a `.env.example` file documenting `COMMISSION_API_KEY=`
   - Add `springdoc-openapi-starter-webmvc-ui` dependency to `server/build.gradle.kts`
-  - Add `server/src/main/resources/openapi.yaml` — the hand-authored OpenAPI 3.0 contract-first YAML file documenting the `/api/commission-quote` endpoint (see design document for full content)
   - Add `springdoc` configuration block to `server/src/main/resources/application.yml`:
     ```yaml
     springdoc:
