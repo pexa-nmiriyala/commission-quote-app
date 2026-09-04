@@ -160,8 +160,24 @@ curl -s -X POST http://localhost:8080/api/commission-quote \
 make test           # backend + frontend unit tests
 make server-test    # backend only
 make client-test    # frontend only
-make e2e            # Playwright (requires servers running via make dev-full)
-make docker-e2e     # Playwright against Docker stack (requires make docker-up)
+```
+
+### E2E Tests
+
+E2E tests run via Playwright. Two modes are available depending on your setup.
+
+**Local dev stack** — requires servers to be running first:
+
+```bash
+make dev-full       # start Keycloak (Docker), backend, and frontend
+make e2e            # run Playwright against http://localhost:5173
+```
+
+**Docker stack** — requires the full Docker stack to be up first:
+
+```bash
+make docker-up      # start all services in Docker
+make docker-e2e     # run Playwright against http://localhost:80
 ```
 
 | Layer | Tests |

@@ -26,12 +26,12 @@ setup('authenticate with Keycloak', async ({ page }) => {
   await page.goto('/');
 
   // Wait for either the login button (unauthenticated) or the form (already authenticated)
-  await page.waitForSelector('button:has-text("Log in"), label:has-text("Loan Amount")', {
+  await page.waitForSelector('button:has-text("Sign in with SSO"), label:has-text("Loan Amount")', {
     timeout: 15_000,
   });
 
   // If already authenticated (e.g. re-running with saved state), skip login
-  const loginButton = page.getByRole('button', { name: /log in/i });
+  const loginButton = page.getByRole('button', { name: /sign in with sso/i });
   if (!(await loginButton.isVisible())) {
     await page.context().storageState({ path: AUTH_STATE_FILE });
     return;
