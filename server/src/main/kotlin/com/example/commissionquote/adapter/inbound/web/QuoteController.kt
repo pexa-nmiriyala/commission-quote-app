@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -28,6 +29,8 @@ import org.springframework.web.bind.annotation.RestController
 class QuoteController(
     private val quoteUseCase: QuoteUseCase,
 ) {
+    private val log = LoggerFactory.getLogger(QuoteController::class.java)
+
     @Operation(
         summary = "Generate a commission quote",
         description = "Accepts loan details and returns a commission quote via the backend proxy",
@@ -98,22 +101,32 @@ class QuoteController(
     }
 
     @ExceptionHandler(ConfigurationException::class)
-    fun handleConfiguration(e: ConfigurationException): ResponseEntity<ErrorResponse> =
-        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ErrorResponse(e.message ?: "Server configuration error"))
+    fun handleConfiguration(e: ConfigurationException): ResponseEntity<ErrorResponse> {
+        log.error("Server configuration error", e)
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ErrorResponse("Server configuration error"))
+    }
 
     @ExceptionHandler(UnauthorisedException::class)
-    fun handleUnauthorised(e: UnauthorisedException): ResponseEntity<ErrorResponse> =
-        ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponse(e.message ?: "Unauthorised — check API key"))
+    fun handleUnauthorised(e: UnauthorisedException): ResponseEntity<ErrorResponse> {
+        log.error("Commission API authentication failed", e)
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponse("Unauthorised — check API key"))
+    }
 
     @ExceptionHandler(UpstreamApiException::class)
-    fun handleUpstream(e: UpstreamApiException): ResponseEntity<ErrorResponse> =
-        ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(ErrorResponse(e.message ?: "Commission API error"))
+    fun handleUpstream(e: UpstreamApiException): ResponseEntity<ErrorResponse> {
+        log.error("Commission API returned an error", e)
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(ErrorResponse("Commission API error"))
+    }
 
     @ExceptionHandler(CommissionApiTimeoutException::class)
-    fun handleTimeout(e: CommissionApiTimeoutException): ResponseEntity<ErrorResponse> =
-        ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).body(ErrorResponse(e.message ?: "Request timed out"))
+    fun handleTimeout(e: CommissionApiTimeoutException): ResponseEntity<ErrorResponse> {
+        log.error("Commission API request timed out", e)
+        return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).body(ErrorResponse("Commission API request timed out"))
+    }
 
     @ExceptionHandler(InvalidResponseException::class)
-    fun handleInvalidResponse(e: InvalidResponseException): ResponseEntity<ErrorResponse> =
-        ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(ErrorResponse(e.message ?: "Invalid response from API"))
+    fun handleInvalidResponse(e: InvalidResponseException): ResponseEntity<ErrorResponse> {
+        log.error("Commission API returned an invalid response", e)
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(ErrorResponse("Received an invalid response from the Commission API"))
+    }
 }
