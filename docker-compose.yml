@@ -1,5 +1,23 @@
 services:
 
+  # ── Keycloak identity provider ─────────────────────────────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    command: start-dev --import-realm --hostname-url=http://localhost:9090 --hostname-admin-url=http://localhost:9090
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+    ports:
+      - "9090:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user $${KEYCLOAK_ADMIN:-admin} --password $${KEYCLOAK_ADMIN_PASSWORD:-admin} 2>&1 | grep -q 'Logging into'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
   # ── Spring Boot backend ────────────────────────────────────────────────────
   server:
     build:
@@ -8,10 +26,21 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: dev
       COMMISSION_API_KEY: ${COMMISSION_API_KEY:-dev-api-key}
+      # KEYCLOAK_ISSUER_URI: public URL — must match the iss claim in tokens
+      #   (Keycloak sets this via --hostname-url).
+      # KEYCLOAK_JWK_SET_URI: internal Docker network URL for JWKS key fetching
+      #   (server can't reach localhost:9090, but can reach keycloak:8080 directly).
+      KEYCLOAK_ISSUER_URI: http://localhost:9090/realms/commission-app
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/commission-app/protocol/openid-connect/certs
+      KEYCLOAK_CLIENT_ID: commission-app-client
+      KEYCLOAK_REALM: commission-app
     ports:
       - "8080:8080"
+    depends_on:
+      keycloak:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || wget -qO- http://localhost:8080/v3/api-docs || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/v3/api-docs || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5

@@ -8,9 +8,23 @@ commission:
 spring:
   profiles:
     active: dev
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # issuer-uri: used for both JWKS discovery and iss claim validation.
+          # In Docker, set KEYCLOAK_ISSUER_URI to the public URL (localhost:9090)
+          # and KEYCLOAK_JWK_SET_URI to the internal service URL (keycloak:8080)
+          # so the server can reach the JWKS endpoint from inside the Docker network.
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:9090/realms/commission-app}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:}
 
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+    # Enable OAuth2 login directly from Swagger UI
+    oauth:
+      client-id: ${KEYCLOAK_CLIENT_ID:commission-app-client}
+      realm: ${KEYCLOAK_REALM:commission-app}
   api-docs:
     path: /v3/api-docs

@@ -12,14 +12,27 @@ import io.mockk.every
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
+import org.springframework.security.oauth2.jwt.JwtDecoder
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
 
 @WebMvcTest(QuoteController::class)
+// Import SecurityConfig so the @WebMvcTest slice uses the real security rules
+// (CSRF disabled, stateless sessions) rather than the default test security config.
+// @MockBean JwtDecoder prevents the slice from trying to contact Keycloak at startup.
+// @WithMockUser provides a fake authenticated principal for the tests that expect 2xx/4xx.
+@Import(com.example.commissionquote.config.SecurityConfig::class)
+@WithMockUser
 class QuoteControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
+
+    @MockBean
+    private lateinit var jwtDecoder: JwtDecoder
 
     @MockkBean
     private lateinit var quoteUseCase: QuoteUseCase

@@ -34,8 +34,13 @@ dependencies {
     // Bean Validation
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
+    // Security — OAuth2 Resource Server (Keycloak JWT validation)
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+
     // Test dependencies
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
     testImplementation("io.mockk:mockk:1.13.12")
     testImplementation("com.ninja-squad:springmockk:4.0.2")
     testImplementation("net.jqwik:jqwik:1.9.1")

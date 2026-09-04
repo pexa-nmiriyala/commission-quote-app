@@ -164,7 +164,58 @@ When the server is running:
 
 ---
 
-## Running with Docker
+## Authentication
+
+The API is secured with OAuth2 / JWT via **Keycloak**. Every request to `/api/**` must include a valid Bearer token.
+
+### Start Keycloak
+
+```bash
+make docker-up
+```
+
+Keycloak starts on `http://localhost:9090`. The `commission-app` realm is pre-configured with a test user.
+
+| | |
+|---|---|
+| Admin console | http://localhost:9090/admin (admin / admin) |
+| Realm | `commission-app` |
+| Test user | `staff-user` / `password123` |
+
+### Get a token
+
+```bash
+curl -s -X POST http://localhost:9090/realms/commission-app/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=password" \
+  -d "client_id=commission-app-client" \
+  -d "username=staff-user" \
+  -d "password=password123" \
+  | jq -r '.access_token'
+```
+
+### Call the API
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:9090/realms/commission-app/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=password" -d "client_id=commission-app-client" \
+  -d "username=staff-user" -d "password=password123" \
+  | jq -r '.access_token')
+
+curl -s -X POST http://localhost:8080/api/commission-quote \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"loanAmount": 50000, "loanTermMonths": 36, "riskBand": "medium"}'
+```
+
+### Swagger UI
+
+The Swagger UI at `http://localhost:8080/swagger-ui.html` has an OAuth2 login button — click **Authorize**, enter your credentials, and all requests will automatically include the Bearer token.
+
+---
+
+
 
 ### Prerequisites
 - Docker 24+ and Docker Compose v2
