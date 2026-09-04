@@ -1,4 +1,4 @@
-.PHONY: dev dev-full test build e2e \
+.PHONY: dev dev-full dev-down test build e2e \
         client-dev client-test client-build \
         server-dev server-test server-build \
         docker-build docker-up docker-down docker-logs \
@@ -8,10 +8,18 @@
 
 dev: client-dev server-dev
 
+## Kill any local dev processes holding ports 8080 (Spring Boot) and 5173 (Vite).
+## Run this before switching between 'make dev-full' and 'make docker-up'.
+dev-down:
+	@echo "Stopping local dev processes on ports 8080 and 5173..."
+	@lsof -ti:8080 | xargs kill -9 2>/dev/null || true
+	@lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+	@echo "Done."
+
 ## Start Keycloak (Docker), backend, and frontend in one command.
 ## Keycloak runs in Docker on port 9090; backend and frontend run on the host.
 ## Use Ctrl+C to stop the frontend/backend; then run 'make docker-down' to stop Keycloak.
-dev-full:
+dev-full: dev-down
 	@echo "Starting Keycloak..."
 	docker compose up -d keycloak
 	@echo "Waiting for Keycloak to be healthy..."
@@ -64,7 +72,7 @@ docker-build:
 ## Start the full stack in Docker (server + client)
 ## App will be available at http://localhost:80
 ## API at http://localhost:8080
-docker-up:
+docker-up: dev-down
 	@echo "Starting Docker stack..."
 	docker compose up -d
 	@echo ""
