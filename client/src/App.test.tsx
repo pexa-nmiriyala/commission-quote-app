@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
+import { resetKeycloakInitFlag } from './auth/keycloakInitFlag';
 
 // Hoist the mock so it's available before imports are resolved.
 // This ensures AuthProvider and useQuote both get the same mock instance.
@@ -19,6 +20,7 @@ vi.mock('./keycloak', () => ({ default: mockKeycloak }));
 describe('App integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetKeycloakInitFlag();
     mockKeycloak.updateToken.mockResolvedValue(true);
     mockKeycloak.init.mockResolvedValue(true);
   });

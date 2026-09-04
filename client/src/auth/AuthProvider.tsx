@@ -1,25 +1,22 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import keycloak from '../keycloak';
 import { AuthContext, type AuthContextValue } from './AuthContext';
+import { isKeycloakInitialized, markKeycloakInitialized } from './keycloakInitFlag';
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Module-level flag that persists across React StrictMode double-invocations.
-// Keycloak's JS adapter throws if init() is called more than once on the same instance.
-let keycloakInitialized = false;
-
 export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => keycloak.authenticated ?? false);
-  const [isLoading, setIsLoading] = useState(() => !keycloakInitialized);
+  const [isLoading, setIsLoading] = useState(() => !isKeycloakInitialized());
 
   useEffect(() => {
-    if (keycloakInitialized) {
+    if (isKeycloakInitialized()) {
       return;
     }
 
-    keycloakInitialized = true;
+    markKeycloakInitialized();
     keycloak
       .init({
         // 'check-sso' silently checks for an existing session without redirecting.
