@@ -6,14 +6,6 @@ Built as a solution to the Bendigo Bank Full-Stack Engineering Code Challenge.
 
 ---
 
-## Context
-
-In our Lending Platform, staff members frequently need to generate "Commission Quotes" based on loan applications. The system processes loan details and sends them to an external Commission Service, which calculates the commission and returns a quote.
-
-This application builds a mock version of that API and a full-stack UI on top of it.
-
----
-
 ## Tech Stack
 
 | Layer | Technology |
@@ -71,165 +63,87 @@ commission-quote-app/
 
 ### Prerequisites
 
-- Java 21
-- Node.js 20+
-- Gradle (or use the `./gradlew` wrapper)
+- Java 21, Node.js 20+, Docker
 
 ### Environment variables
-
-Copy `.env.example` and set your API key:
 
 ```bash
 cp .env.example .env
 ```
 
-At minimum, set `COMMISSION_API_KEY`. The other variables have sensible defaults for local dev with Docker:
+Set `COMMISSION_API_KEY` to any non-empty value for local dev (the mock adapter doesn't call any real service). Everything else has sensible defaults.
 
-```
-# Required in all environments
-COMMISSION_API_KEY=your-api-key-here
-
-# Keycloak admin credentials (docker-compose)
-KEYCLOAK_ADMIN=admin
-KEYCLOAK_ADMIN_PASSWORD=admin
-
-# Spring Boot OAuth2 resource server — issuer URI for JWT validation
-KEYCLOAK_ISSUER_URI=http://localhost:9090/realms/commission-app
-
-# OAuth2 client used by Swagger UI
-KEYCLOAK_CLIENT_ID=commission-app-client
-KEYCLOAK_REALM=commission-app
-
-# Public Keycloak URL reachable from the browser (baked into frontend at build time)
-KEYCLOAK_PUBLIC_URL=http://localhost:9090
-```
-
-> In `dev` and `local` profiles, the mock adapter is used and does not validate the API key at the adapter level. The key is still required by `QuoteApplicationService` to prevent misconfigured deployments.
-
-### Run locally
-
-To start everything (Keycloak + backend + frontend) with a single command:
+### Run
 
 ```bash
 make dev-full
 ```
 
-This starts Keycloak in Docker (port 9090), then the Spring Boot backend and Vite dev server on the host. Press `Ctrl+C` to stop the frontend/backend, then run `make docker-down` to stop Keycloak.
+Starts Keycloak in Docker (port 9090), the Spring Boot backend (port 8080), and the Vite dev server (port 5173). Open http://localhost:5173 and log in with `staff-user` / `password123`.
 
-Alternatively, start each piece in its own terminal:
+Press `Ctrl+C` to stop the frontend/backend, then `make docker-down` to stop Keycloak.
+
+### Run in Docker
 
 ```bash
-make docker-up    # Terminal 0 — Keycloak only (or skip for mock auth)
-
-# Terminal 1 — Spring Boot backend (dev profile, uses mock adapter)
-make server-dev
-
-# Terminal 2 — Vite dev server
-make client-dev
+make docker-build   # build images (server jar built on host first)
+make docker-up      # start full stack
 ```
 
-This starts:
-- Spring Boot backend on `http://localhost:8080` (uses mock adapter)
-- Vite dev server on `http://localhost:5173` (proxies `/api/*` to backend)
+| Service | URL |
+|---|---|
+| Frontend (Nginx) | http://localhost:80 |
+| Backend | http://localhost:8080 |
+| Swagger UI | http://localhost:8080/swagger-ui.html |
+| Keycloak | http://localhost:9090 |
 
-Open `http://localhost:5173` in your browser.
-
-> **Note:** `make dev` runs both targets sequentially in the same shell session,
-> which means the Vite server (launched first) blocks the terminal and the Spring Boot
-> server never starts. Run them in separate terminals as shown above.
+```bash
+make docker-logs    # tail logs
+make docker-down    # stop and remove containers
+```
 
 ---
 
-## Commission Quote API Spec
-
-The backend exposes a single endpoint:
+## API
 
 ```
 POST /api/commission-quote
+Authorization: Bearer <token>
 Content-Type: application/json
 
-{
-  "loanAmount": 50000.0,
-  "loanTermMonths": 36,
-  "riskBand": "low" | "medium" | "high"
-}
+{ "loanAmount": 50000.0, "loanTermMonths": 36, "riskBand": "low" | "medium" | "high" }
 ```
 
-**Success (200):**
+**200 OK:**
 ```json
-{
-  "quoteId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "commission": 5250.00,
-  "totalRepayable": 55250.00
-}
+{ "quoteId": "...", "commission": 5250.00, "totalRepayable": 55250.00 }
 ```
 
-**Error (4xx/5xx):**
-```json
-{
-  "error": "Human-readable error message"
-}
-```
+**Error:** `{ "error": "Human-readable message" }`
 
-**Security:** Requests require an `Authorization: Bearer <token>` header (OAuth2 / JWT issued by Keycloak). The `COMMISSION_API_KEY` is an internal server-to-upstream secret injected server-side — it is never sent to the browser.
+Commission formula: `loanAmount × riskMultiplier × (loanTermMonths / 12)`
+where `low = 0.02`, `medium = 0.035`, `high = 0.05`. The mock adapter simulates ~20% random failures.
 
-### Commission formula (mock)
-
-```
-commission     = loanAmount × riskMultiplier × (loanTermMonths / 12)
-totalRepayable = loanAmount + commission
-
-riskMultiplier: low = 0.02 | medium = 0.035 | high = 0.05
-```
-
-The mock adapter simulates ~20% random failures to mimic real-world API instability.
-
-### Swagger UI
-
-When the server is running:
-
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+Swagger UI at http://localhost:8080/swagger-ui.html supports OAuth2 login for interactive testing.
 
 ---
 
 ## Authentication
 
-The API is secured with OAuth2 / JWT via **Keycloak**. Every request to `/api/**` must include a valid Bearer token.
-
-### Start Keycloak
-
-```bash
-make docker-up
-```
-
-Keycloak starts on `http://localhost:9090`. The `commission-app` realm is pre-configured with a test user.
+Secured with OAuth2 / JWT via Keycloak. Every request to `/api/**` requires a valid Bearer token.
 
 | | |
 |---|---|
-| Admin console | http://localhost:9090/admin (admin / admin) |
 | Realm | `commission-app` |
 | Test user | `staff-user` / `password123` |
+| Admin console | http://localhost:9090/admin (admin / admin) |
 
-### Get a token
-
-```bash
-curl -s -X POST http://localhost:9090/realms/commission-app/protocol/openid-connect/token \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=password" \
-  -d "client_id=commission-app-client" \
-  -d "username=staff-user" \
-  -d "password=password123" \
-  | jq -r '.access_token'
-```
-
-### Call the API
+Get a token and call the API:
 
 ```bash
 TOKEN=$(curl -s -X POST http://localhost:9090/realms/commission-app/protocol/openid-connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=password" -d "client_id=commission-app-client" \
-  -d "username=staff-user" -d "password=password123" \
+  -d "grant_type=password&client_id=commission-app-client&username=staff-user&password=password123" \
   | jq -r '.access_token')
 
 curl -s -X POST http://localhost:8080/api/commission-quote \
@@ -238,96 +152,17 @@ curl -s -X POST http://localhost:8080/api/commission-quote \
   -d '{"loanAmount": 50000, "loanTermMonths": 36, "riskBand": "medium"}'
 ```
 
-### Swagger UI
-
-The Swagger UI at `http://localhost:8080/swagger-ui.html` has an OAuth2 login button — click **Authorize**, enter your credentials, and all requests will automatically include the Bearer token.
-
 ---
 
-## Running with Docker
-
-### Prerequisites
-- Java 21 and Node.js 20+ (required for the host build step — see below)
-
-### How the Docker build works
-
-The server jar is built on the host before being packaged into the Docker image. This avoids Gradle needing network access inside the Alpine container to download its own distribution.
-
-```
-host: ./gradlew bootJar  →  server/build/libs/*.jar
-                                  ↓
-Docker:  COPY build/libs/*.jar app.jar  →  eclipse-temurin:21-jre-alpine
-```
-
-The client is built entirely inside Docker (Node.js is available in the `node:20-alpine` build stage).
-
-### Start the full stack
+## Tests
 
 ```bash
-make docker-build   # builds server jar on host, then packages both images
-make docker-up      # start server + client in background
+make test           # backend + frontend unit tests
+make server-test    # backend only
+make client-test    # frontend only
+make e2e            # Playwright (requires servers running via make dev-full)
+make docker-e2e     # Playwright against Docker stack (requires make docker-up)
 ```
-
-| Service | URL |
-|---|---|
-| Frontend (Nginx) | http://localhost:80 |
-| Backend (Spring Boot) | http://localhost:8080 |
-| Swagger UI | http://localhost:8080/swagger-ui.html |
-
-```bash
-make docker-logs    # tail combined logs
-make docker-down    # stop and remove containers
-make docker-restart # rebuild images and restart
-```
-
-### Run tests
-
-```bash
-make docker-test    # server tests on host (Gradle) + client tests in Docker (Vitest)
-```
-
-> Server tests run on the host via `./gradlew test` because the Gradle wrapper
-> requires downloading its distribution, which is unavailable inside the Docker
-> build environment. Client tests run inside `node:20-alpine`.
-
-### Run E2E against Docker stack
-
-```bash
-make docker-build   # build images (if not already built)
-make docker-up      # stack must be running first
-make docker-e2e     # Playwright hits http://localhost:80
-make docker-down    # tear down when done
-```
-
-### Environment variables in Docker
-
-The `COMMISSION_API_KEY` is passed through from your shell environment. If not set, it defaults to `dev-api-key` (fine for local dev with the mock adapter).
-
-```bash
-COMMISSION_API_KEY=my-key make docker-up
-```
-
-Or add it to a `.env` file at the project root — Docker Compose picks it up automatically.
-
----
-
-## Running Tests
-
-```bash
-# All tests (backend + frontend)
-make test
-
-# Backend only
-make server-test
-
-# Frontend only
-make client-test
-
-# E2E (requires both servers running)
-make e2e
-```
-
-**Test coverage:**
 
 | Layer | Tests |
 |---|---|
@@ -342,26 +177,6 @@ make e2e
 
 ---
 
-## Building for production
-
-```bash
-make build
-```
-
-This produces:
-- `server/build/libs/commission-quote-*.jar` — executable Spring Boot jar
-- `client/dist/` — static frontend assets (serve via Spring Boot or a CDN)
-
----
-
 ## AI Usage
 
-This project was built with AI assistance (Kiro). AI was used to:
-
-- Generate boilerplate project structure and configuration
-- Scaffold Kotlin data classes, Spring controllers, and React components
-- Write unit, integration, and E2E tests
-
-All generated code was reviewed for correctness, security, and alignment with the architectural decisions in the spec.
-
-The spec documents (`/.kiro/specs/commission-quote-app/`) contain the requirements, design decisions, and task breakdown used to guide implementation.
+Built with AI assistance (Kiro IDE and Claude) for boilerplate, scaffolding, and tests. All generated code was reviewed for correctness, security, and architectural alignment. Spec documents in `/.kiro/specs/commission-quote-app/`.
