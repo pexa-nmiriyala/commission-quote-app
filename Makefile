@@ -57,6 +57,22 @@ dev-full: dev-down check-prereqs
 	cd client && npm install
 	@echo "Starting backend (logs → /tmp/server.log)..."
 	set -a && [ -f .env ] && . ./.env; set +a; cd server && SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun > /tmp/server.log 2>&1 &
+	@echo "Waiting for backend to start..."
+	@for i in $$(seq 1 30); do \
+	  if grep -q "Started CommissionQuoteApplicationKt" /tmp/server.log 2>/dev/null; then \
+	    echo "✅ Backend started successfully."; break; \
+	  fi; \
+	  if grep -qE "BUILD FAILED|ERROR|Process.*finished with non-zero" /tmp/server.log 2>/dev/null; then \
+	    echo "❌ Backend failed to start. Last 20 lines of /tmp/server.log:"; \
+	    tail -20 /tmp/server.log; \
+	    exit 1; \
+	  fi; \
+	  if [ $$i -eq 30 ]; then \
+	    echo "⚠️  Backend did not start within 60s. Check /tmp/server.log for details."; \
+	    tail -20 /tmp/server.log; \
+	  fi; \
+	  sleep 2; \
+	done
 	@echo "Starting frontend..."
 	cd client && npm run dev
 
