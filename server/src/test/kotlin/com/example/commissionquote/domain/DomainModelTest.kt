@@ -3,12 +3,12 @@ package com.example.commissionquote.domain
 import com.example.commissionquote.domain.model.LoanDetails
 import com.example.commissionquote.domain.model.RiskBand
 import com.example.commissionquote.domain.service.CommissionCalculator
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class DomainModelTest {
-
     // ── RiskBand ──────────────────────────────────────────────────────────
 
     @Test
