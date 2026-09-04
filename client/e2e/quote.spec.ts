@@ -8,25 +8,17 @@ test('fills form and shows quote result', async ({ page }) => {
   await page.fill('#loanTermMonths', '36');
   await page.selectOption('#riskBand', 'medium');
 
-  // Retry clicking because MockCommissionApiAdapter has ~20% failure rate
-  // Use route interception to ensure a successful response on the first try
+  // Intercept the API call and always return a fixed quote for deterministic assertions
   await page.route('/api/commission-quote', async (route) => {
-    const response = await route.fetch();
-    // If the mock returned an error (502), retry with a fresh fetch
-    if (response.status() !== 200) {
-      // Simulate a forced success by directly fulfilling with a fixed quote
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          quoteId: 'test-quote-id-001',
-          commission: 5833.33,
-          totalRepayable: 55833.33,
-        }),
-      });
-    } else {
-      await route.continue();
-    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        quoteId: 'test-quote-id-001',
+        commission: 5833.33,
+        totalRepayable: 55833.33,
+      }),
+    });
   });
 
   await page.click('button[type="submit"]');

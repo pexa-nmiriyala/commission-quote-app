@@ -11,11 +11,11 @@
   },
   "lint-staged": {
     "client/src/**/*.{ts,tsx}": [
-      "prettier --write",
-      "eslint --fix --max-warnings=0"
+      "npx --prefix client prettier --write",
+      "npx --prefix client eslint --fix --max-warnings=0"
     ],
     "client/e2e/**/*.ts": [
-      "prettier --write"
+      "npx --prefix client prettier --write"
     ],
     "server/src/**/*.kt": [
       "sh -c 'cd server && ./gradlew ktlintFormat'"

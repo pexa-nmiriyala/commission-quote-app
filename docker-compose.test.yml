@@ -1,0 +1,23 @@
+services:
+
+  # ── Run backend tests inside Docker ───────────────────────────────────────
+  server-test:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: builder
+    command: ["./gradlew", "test", "--no-daemon"]
+    environment:
+      COMMISSION_API_KEY: test-api-key
+    volumes:
+      # Mount test reports out of the container for inspection
+      - ./server/build/reports:/app/build/reports
+
+  # ── Run frontend tests inside Docker ──────────────────────────────────────
+  client-test:
+    image: node:20-alpine
+    working_dir: /app
+    command: ["sh", "-c", "npm ci --ignore-scripts && npx vitest run"]
+    volumes:
+      - ./client:/app
+      - /app/node_modules

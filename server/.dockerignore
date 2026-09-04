@@ -1,0 +1,12 @@
+# Keep only the pre-built jar — everything else is built on the host
+src/
+gradle/
+gradlew
+gradlew.bat
+build.gradle.kts
+settings.gradle.kts
+.gradle/
+build/reports/
+build/classes/
+build/kotlin/
+build/tmp/
