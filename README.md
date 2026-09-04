@@ -2,8 +2,6 @@
 
 A full-stack web application that captures loan details, securely calls a Commission Quote API via a backend proxy, and displays the resulting commission quote.
 
-Built as a solution to the Bendigo Bank Full-Stack Engineering Code Challenge.
-
 ---
 
 ## Tech Stack
