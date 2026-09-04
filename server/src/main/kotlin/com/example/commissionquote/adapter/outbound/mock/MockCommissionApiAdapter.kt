@@ -8,14 +8,15 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.util.UUID
 
-class UpstreamApiException(message: String) : RuntimeException(message)
+class UpstreamApiException(
+    message: String,
+) : RuntimeException(message)
 
 @Profile("dev", "local")
 @Service
 class MockCommissionApiAdapter(
-    private val calculator: CommissionCalculator
+    private val calculator: CommissionCalculator,
 ) : CommissionApiPort {
-
     override fun fetchQuote(details: LoanDetails): QuoteResult {
         if (Math.random() < 0.2) {
             throw UpstreamApiException("Commission API error")
@@ -24,7 +25,7 @@ class MockCommissionApiAdapter(
         return QuoteResult(
             quoteId = UUID.randomUUID().toString(),
             commission = commission,
-            totalRepayable = totalRepayable
+            totalRepayable = totalRepayable,
         )
     }
 }

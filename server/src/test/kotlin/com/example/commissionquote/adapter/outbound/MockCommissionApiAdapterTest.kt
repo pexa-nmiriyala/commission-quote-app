@@ -5,11 +5,12 @@ import com.example.commissionquote.adapter.outbound.mock.UpstreamApiException
 import com.example.commissionquote.domain.model.LoanDetails
 import com.example.commissionquote.domain.model.RiskBand
 import com.example.commissionquote.domain.service.CommissionCalculator
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class MockCommissionApiAdapterTest {
-
     private val calculator = CommissionCalculator()
     private val details = LoanDetails(50000.0, 36, RiskBand.MEDIUM)
 
@@ -21,7 +22,8 @@ class MockCommissionApiAdapterTest {
             try {
                 result = MockCommissionApiAdapter(calculator).fetchQuote(details)
                 return@repeat
-            } catch (_: UpstreamApiException) { }
+            } catch (_: UpstreamApiException) {
+            }
         }
         assertNotNull(result)
         assertTrue(result!!.quoteId.isNotBlank())
@@ -34,7 +36,8 @@ class MockCommissionApiAdapterTest {
             try {
                 commission = MockCommissionApiAdapter(calculator).fetchQuote(details).commission
                 return@repeat
-            } catch (_: UpstreamApiException) { }
+            } catch (_: UpstreamApiException) {
+            }
         }
         assertNotNull(commission)
         assertTrue(commission!! > 0)
@@ -47,7 +50,8 @@ class MockCommissionApiAdapterTest {
             try {
                 totalRepayable = MockCommissionApiAdapter(calculator).fetchQuote(details).totalRepayable
                 return@repeat
-            } catch (_: UpstreamApiException) { }
+            } catch (_: UpstreamApiException) {
+            }
         }
         assertNotNull(totalRepayable)
         assertTrue(totalRepayable!! > details.loanAmount)
@@ -61,7 +65,8 @@ class MockCommissionApiAdapterTest {
             try {
                 result = MockCommissionApiAdapter(calculator).fetchQuote(details)
                 return@repeat
-            } catch (_: UpstreamApiException) { }
+            } catch (_: UpstreamApiException) {
+            }
         }
         assertNotNull(result)
         assertEquals(expectedCommission, result!!.commission, 0.001)
@@ -76,7 +81,8 @@ class MockCommissionApiAdapterTest {
             try {
                 ids.add(MockCommissionApiAdapter(calculator).fetchQuote(details).quoteId)
                 collected++
-            } catch (_: UpstreamApiException) { }
+            } catch (_: UpstreamApiException) {
+            }
         }
         // All collected IDs should be unique
         if (collected > 1) {

@@ -1,0 +1,24 @@
+{
+  "name": "commission-quote-app",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "9.1.7",
+    "lint-staged": "15.5.2"
+  },
+  "lint-staged": {
+    "client/src/**/*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix --max-warnings=0"
+    ],
+    "client/e2e/**/*.ts": [
+      "prettier --write"
+    ],
+    "server/src/**/*.kt": [
+      "sh -c 'cd server && ./gradlew ktlintFormat'"
+    ]
+  }
+}

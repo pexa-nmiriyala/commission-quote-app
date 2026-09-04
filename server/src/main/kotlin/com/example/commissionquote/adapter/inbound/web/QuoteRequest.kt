@@ -10,13 +10,11 @@ data class QuoteRequest(
     @field:Positive
     @Schema(description = "Loan amount in dollars", example = "50000.0", minimum = "0.01")
     val loanAmount: Double?,
-
     @field:NotNull
     @field:Positive
     @Schema(description = "Loan term in months", example = "36", minimum = "1")
     val loanTermMonths: Int?,
-
     @field:NotBlank
     @Schema(description = "Risk band", example = "medium", allowableValues = ["low", "medium", "high"])
-    val riskBand: String?
+    val riskBand: String?,
 )

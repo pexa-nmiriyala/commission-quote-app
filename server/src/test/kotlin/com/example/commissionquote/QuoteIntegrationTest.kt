@@ -17,7 +17,6 @@ import org.springframework.test.context.TestPropertySource
 @ActiveProfiles("dev")
 @TestPropertySource(properties = ["COMMISSION_API_KEY=test-api-key"])
 class QuoteIntegrationTest {
-
     @LocalServerPort
     private var port: Int = 0
 
@@ -26,20 +25,22 @@ class QuoteIntegrationTest {
 
     @Test
     fun `POST commission-quote with valid input returns 200 with quote shape`() {
-        val headers = HttpHeaders().apply {
-            contentType = MediaType.APPLICATION_JSON
-        }
+        val headers =
+            HttpHeaders().apply {
+                contentType = MediaType.APPLICATION_JSON
+            }
         val requestBody = """{"loanAmount": 50000.0, "loanTermMonths": 36, "riskBand": "medium"}"""
         val request = HttpEntity(requestBody, headers)
 
         // MockCommissionApiAdapter has ~20% failure rate — retry up to 10 times to get a success
         var successBody: Map<*, *>? = null
         for (attempt in 1..10) {
-            val response = restTemplate.postForEntity(
-                "http://localhost:$port/api/commission-quote",
-                request,
-                Map::class.java
-            )
+            val response =
+                restTemplate.postForEntity(
+                    "http://localhost:$port/api/commission-quote",
+                    request,
+                    Map::class.java,
+                )
             if (response.statusCode == HttpStatus.OK) {
                 successBody = response.body
                 break
@@ -56,17 +57,19 @@ class QuoteIntegrationTest {
 
     @Test
     fun `POST commission-quote with invalid loanAmount returns 400`() {
-        val headers = HttpHeaders().apply {
-            contentType = MediaType.APPLICATION_JSON
-        }
+        val headers =
+            HttpHeaders().apply {
+                contentType = MediaType.APPLICATION_JSON
+            }
         val requestBody = """{"loanAmount": -100.0, "loanTermMonths": 36, "riskBand": "medium"}"""
         val request = HttpEntity(requestBody, headers)
 
-        val response = restTemplate.postForEntity(
-            "http://localhost:$port/api/commission-quote",
-            request,
-            Map::class.java
-        )
+        val response =
+            restTemplate.postForEntity(
+                "http://localhost:$port/api/commission-quote",
+                request,
+                Map::class.java,
+            )
 
         assert(response.statusCode == HttpStatus.BAD_REQUEST) {
             "Expected 400, got ${response.statusCode}"
@@ -75,17 +78,19 @@ class QuoteIntegrationTest {
 
     @Test
     fun `POST commission-quote with invalid riskBand returns 400`() {
-        val headers = HttpHeaders().apply {
-            contentType = MediaType.APPLICATION_JSON
-        }
+        val headers =
+            HttpHeaders().apply {
+                contentType = MediaType.APPLICATION_JSON
+            }
         val requestBody = """{"loanAmount": 50000.0, "loanTermMonths": 36, "riskBand": "invalid"}"""
         val request = HttpEntity(requestBody, headers)
 
-        val response = restTemplate.postForEntity(
-            "http://localhost:$port/api/commission-quote",
-            request,
-            Map::class.java
-        )
+        val response =
+            restTemplate.postForEntity(
+                "http://localhost:$port/api/commission-quote",
+                request,
+                Map::class.java,
+            )
 
         assert(response.statusCode == HttpStatus.BAD_REQUEST) {
             "Expected 400, got ${response.statusCode}"

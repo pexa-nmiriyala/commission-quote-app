@@ -15,13 +15,13 @@ import java.time.Duration
 data class CommissionApiRequest(
     val loanAmount: Double,
     val loanTermMonths: Int,
-    val riskBand: String
+    val riskBand: String,
 )
 
 data class CommissionApiResponse(
     val quoteId: String?,
     val commission: Double?,
-    val totalRepayable: Double?
+    val totalRepayable: Double?,
 )
 
 @ConditionalOnMissingBean(CommissionApiPort::class)
@@ -29,31 +29,31 @@ data class CommissionApiResponse(
 class CommissionApiAdapter(
     private val webClient: WebClient,
     @Value("\${commission.api.url}") private val apiUrl: String,
-    @Value("\${COMMISSION_API_KEY:}") private val apiKey: String
+    @Value("\${COMMISSION_API_KEY:}") private val apiKey: String,
 ) : CommissionApiPort {
-
     override fun fetchQuote(details: LoanDetails): QuoteResult {
-        val requestBody = CommissionApiRequest(
-            loanAmount = details.loanAmount,
-            loanTermMonths = details.loanTermMonths,
-            riskBand = details.riskBand.name.lowercase()
-        )
+        val requestBody =
+            CommissionApiRequest(
+                loanAmount = details.loanAmount,
+                loanTermMonths = details.loanTermMonths,
+                riskBand = details.riskBand.name.lowercase(),
+            )
 
         return try {
-            val response = webClient.post()
-                .uri(apiUrl)
-                .header("api-key", apiKey)
-                .bodyValue(requestBody)
-                .retrieve()
-                .onStatus({ it.value() == 401 }) {
-                    Mono.error(UnauthorisedException("Unauthorised — check API key"))
-                }
-                .onStatus({ it.is5xxServerError }) {
-                    Mono.error(UpstreamApiException("Commission API error"))
-                }
-                .bodyToMono(CommissionApiResponse::class.java)
-                .timeout(Duration.ofSeconds(10))
-                .block()
+            val response =
+                webClient
+                    .post()
+                    .uri(apiUrl)
+                    .header("api-key", apiKey)
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .onStatus({ it.value() == 401 }) {
+                        Mono.error(UnauthorisedException("Unauthorised — check API key"))
+                    }.onStatus({ it.is5xxServerError }) {
+                        Mono.error(UpstreamApiException("Commission API error"))
+                    }.bodyToMono(CommissionApiResponse::class.java)
+                    .timeout(Duration.ofSeconds(10))
+                    .block()
 
             if (response == null || response.quoteId == null || response.commission == null || response.totalRepayable == null) {
                 throw InvalidResponseException("Invalid response from API")
@@ -62,7 +62,7 @@ class CommissionApiAdapter(
             QuoteResult(
                 quoteId = response.quoteId,
                 commission = response.commission,
-                totalRepayable = response.totalRepayable
+                totalRepayable = response.totalRepayable,
             )
         } catch (e: UnauthorisedException) {
             throw e

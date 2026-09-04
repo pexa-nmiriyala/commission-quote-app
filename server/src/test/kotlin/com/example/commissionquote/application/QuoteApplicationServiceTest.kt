@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 class QuoteApplicationServiceTest {
-
     private val commissionApiPort: CommissionApiPort = mockk()
 
     private val loanDetails = LoanDetails(50000.0, 36, RiskBand.MEDIUM)

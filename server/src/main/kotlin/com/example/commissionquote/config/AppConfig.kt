@@ -13,7 +13,7 @@ import java.time.Duration
 
 @Configuration
 class AppConfig(
-    @Value("\${COMMISSION_API_KEY:}") val apiKey: String
+    @Value("\${COMMISSION_API_KEY:}") val apiKey: String,
 ) {
     private val log = LoggerFactory.getLogger(AppConfig::class.java)
 
@@ -26,9 +26,11 @@ class AppConfig(
 
     @Bean
     fun webClient(builder: WebClient.Builder): WebClient {
-        val httpClient = HttpClient.create()
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10_000)
-            .responseTimeout(Duration.ofSeconds(10))
+        val httpClient =
+            HttpClient
+                .create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10_000)
+                .responseTimeout(Duration.ofSeconds(10))
         return builder
             .clientConnector(ReactorClientHttpConnector(httpClient))
             .build()
