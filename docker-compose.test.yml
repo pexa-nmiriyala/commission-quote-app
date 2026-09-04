@@ -1,19 +1,9 @@
 services:
 
-  # ── Run backend tests inside Docker ───────────────────────────────────────
-  server-test:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-      target: builder
-    command: ["./gradlew", "test", "--no-daemon"]
-    environment:
-      COMMISSION_API_KEY: test-api-key
-    volumes:
-      # Mount test reports out of the container for inspection
-      - ./server/build/reports:/app/build/reports
-
-  # ── Run frontend tests inside Docker ──────────────────────────────────────
+  # ── Run frontend (Vitest) tests inside Docker ──────────────────────────────
+  # Server tests run on the host via: make server-test (./gradlew test)
+  # They cannot run inside Docker because the Gradle wrapper needs to download
+  # its distribution, which fails in network-restricted environments.
   client-test:
     image: node:20-alpine
     working_dir: /app

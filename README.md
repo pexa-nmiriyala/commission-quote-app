@@ -158,11 +158,24 @@ When the server is running:
 
 ### Prerequisites
 - Docker 24+ and Docker Compose v2
+- Java 21 and Node.js 20+ (required for the host build step — see below)
+
+### How the Docker build works
+
+The server jar is built on the host before being packaged into the Docker image. This avoids Gradle needing network access inside the Alpine container to download its own distribution.
+
+```
+host: ./gradlew bootJar  →  server/build/libs/*.jar
+                                  ↓
+Docker:  COPY build/libs/*.jar app.jar  →  eclipse-temurin:21-jre-alpine
+```
+
+The client is built entirely inside Docker (Node.js is available in the `node:20-alpine` build stage).
 
 ### Start the full stack
 
 ```bash
-make docker-build   # build images (first time or after code changes)
+make docker-build   # builds server jar on host, then packages both images
 make docker-up      # start server + client in background
 ```
 
@@ -178,17 +191,23 @@ make docker-down    # stop and remove containers
 make docker-restart # rebuild images and restart
 ```
 
-### Run tests in Docker
+### Run tests
 
 ```bash
-make docker-test    # backend (JUnit) + frontend (Vitest) in Docker
+make docker-test    # server tests on host (Gradle) + client tests in Docker (Vitest)
 ```
+
+> Server tests run on the host via `./gradlew test` because the Gradle wrapper
+> requires downloading its distribution, which is unavailable inside the Docker
+> build environment. Client tests run inside `node:20-alpine`.
 
 ### Run E2E against Docker stack
 
 ```bash
+make docker-build   # build images (if not already built)
 make docker-up      # stack must be running first
 make docker-e2e     # Playwright hits http://localhost:80
+make docker-down    # tear down when done
 ```
 
 ### Environment variables in Docker

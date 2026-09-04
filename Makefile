@@ -72,10 +72,14 @@ docker-logs:
 ## Rebuild images and restart the stack
 docker-restart: docker-down docker-build docker-up
 
-## Run backend + frontend tests inside Docker
+## Run tests: backend on host (Gradle), frontend (Vitest) in Docker
+## Note: server tests run on the host because the Gradle wrapper requires
+## network access to download its distribution, which is unavailable inside
+## the Docker build environment.
 docker-test:
-	@echo "Running tests in Docker..."
-	docker compose -f docker-compose.test.yml run --rm server-test
+	@echo "Running server tests on host..."
+	cd server && ./gradlew test
+	@echo "Running client tests in Docker..."
 	docker compose -f docker-compose.test.yml run --rm client-test
 
 ## Run Playwright E2E tests against the running Docker stack
