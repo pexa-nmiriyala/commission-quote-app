@@ -1,6 +1,5 @@
 package com.example.commissionquote.adapter.outbound.http
 
-import com.example.commissionquote.adapter.outbound.mock.UpstreamApiException
 import com.example.commissionquote.domain.model.LoanDetails
 import com.example.commissionquote.domain.model.QuoteResult
 import com.example.commissionquote.domain.port.outbound.CommissionApiPort
@@ -10,18 +9,18 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
-import java.time.Duration
+import java.math.BigDecimal
 
 data class CommissionApiRequest(
-    val loanAmount: Double,
+    val loanAmount: BigDecimal,
     val loanTermMonths: Int,
     val riskBand: String,
 )
 
 data class CommissionApiResponse(
     val quoteId: String?,
-    val commission: Double?,
-    val totalRepayable: Double?,
+    val commission: BigDecimal?,
+    val totalRepayable: BigDecimal?,
 )
 
 @ConditionalOnMissingBean(CommissionApiPort::class)
@@ -52,8 +51,11 @@ class CommissionApiAdapter(
                     }.onStatus({ it.is5xxServerError }) {
                         Mono.error(UpstreamApiException("Commission API error"))
                     }.bodyToMono(CommissionApiResponse::class.java)
-                    .timeout(Duration.ofSeconds(10))
                     .block()
+            // Note: response timeout is configured on the WebClient's HttpClient (AppConfig),
+            // which surfaces as io.netty.handler.timeout.ReadTimeoutException.
+            // A redundant .timeout() operator has been removed — it caused double-wrapping
+            // that bypassed the TimeoutException catch block and produced 500 instead of 504.
 
             if (response == null || response.quoteId == null || response.commission == null || response.totalRepayable == null) {
                 throw InvalidResponseException("Invalid response from API")

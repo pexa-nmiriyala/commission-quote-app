@@ -10,12 +10,13 @@ import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.math.BigDecimal
 
 class QuoteApplicationServiceTest {
     private val commissionApiPort: CommissionApiPort = mockk()
 
-    private val loanDetails = LoanDetails(50000.0, 36, RiskBand.MEDIUM)
-    private val expectedResult = QuoteResult("quote-123", 5250.0, 55250.0)
+    private val loanDetails = LoanDetails(BigDecimal("50000.00"), 36, RiskBand.MEDIUM)
+    private val expectedResult = QuoteResult("quote-123", BigDecimal("5250.00"), BigDecimal("55250.00"))
 
     @Test
     fun `generateQuote - throws ConfigurationException when apiKey is blank`() {
@@ -57,12 +58,12 @@ class QuoteApplicationServiceTest {
     @Test
     fun `generateQuote - returns exact QuoteResult from port`() {
         val service = QuoteApplicationService(commissionApiPort, "my-key")
-        val customResult = QuoteResult("abc-999", 123.45, 10123.45)
+        val customResult = QuoteResult("abc-999", BigDecimal("123.45"), BigDecimal("10123.45"))
         every { commissionApiPort.fetchQuote(loanDetails) } returns customResult
 
         val result = service.generateQuote(loanDetails)
         assertEquals("abc-999", result.quoteId)
-        assertEquals(123.45, result.commission)
-        assertEquals(10123.45, result.totalRepayable)
+        assertEquals(BigDecimal("123.45"), result.commission)
+        assertEquals(BigDecimal("10123.45"), result.totalRepayable)
     }
 }

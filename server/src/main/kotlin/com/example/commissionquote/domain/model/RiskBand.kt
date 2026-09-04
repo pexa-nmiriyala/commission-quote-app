@@ -1,11 +1,13 @@
 package com.example.commissionquote.domain.model
 
+import java.math.BigDecimal
+
 enum class RiskBand(
-    val multiplier: Double,
+    val multiplier: BigDecimal,
 ) {
-    LOW(0.02),
-    MEDIUM(0.035),
-    HIGH(0.05),
+    LOW(BigDecimal("0.02")),
+    MEDIUM(BigDecimal("0.035")),
+    HIGH(BigDecimal("0.05")),
     ;
 
     companion object {

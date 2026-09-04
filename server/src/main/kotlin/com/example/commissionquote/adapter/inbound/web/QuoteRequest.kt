@@ -4,12 +4,13 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Positive
+import java.math.BigDecimal
 
 data class QuoteRequest(
     @field:NotNull
     @field:Positive
-    @Schema(description = "Loan amount in dollars", example = "50000.0", minimum = "0.01")
-    val loanAmount: Double?,
+    @Schema(description = "Loan amount in dollars", example = "50000.00", minimum = "0.01")
+    val loanAmount: BigDecimal?,
     @field:NotNull
     @field:Positive
     @Schema(description = "Loan term in months", example = "36", minimum = "1")

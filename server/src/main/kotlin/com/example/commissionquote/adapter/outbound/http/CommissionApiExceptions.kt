@@ -11,3 +11,7 @@ class InvalidResponseException(
 class CommissionApiTimeoutException(
     message: String,
 ) : RuntimeException(message)
+
+class UpstreamApiException(
+    message: String,
+) : RuntimeException(message)

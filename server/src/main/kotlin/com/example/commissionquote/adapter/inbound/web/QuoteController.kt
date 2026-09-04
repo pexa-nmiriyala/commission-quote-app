@@ -3,7 +3,7 @@ package com.example.commissionquote.adapter.inbound.web
 import com.example.commissionquote.adapter.outbound.http.CommissionApiTimeoutException
 import com.example.commissionquote.adapter.outbound.http.InvalidResponseException
 import com.example.commissionquote.adapter.outbound.http.UnauthorisedException
-import com.example.commissionquote.adapter.outbound.mock.UpstreamApiException
+import com.example.commissionquote.adapter.outbound.http.UpstreamApiException
 import com.example.commissionquote.application.ConfigurationException
 import com.example.commissionquote.domain.model.LoanDetails
 import com.example.commissionquote.domain.model.RiskBand

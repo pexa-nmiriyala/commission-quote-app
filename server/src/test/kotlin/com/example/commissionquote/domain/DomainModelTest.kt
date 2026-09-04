@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.math.BigDecimal
 
 class DomainModelTest {
     // ── RiskBand ──────────────────────────────────────────────────────────
@@ -39,17 +40,17 @@ class DomainModelTest {
 
     @Test
     fun `RiskBand multipliers are correct`() {
-        assertEquals(0.02, RiskBand.LOW.multiplier)
-        assertEquals(0.035, RiskBand.MEDIUM.multiplier)
-        assertEquals(0.05, RiskBand.HIGH.multiplier)
+        assertEquals(BigDecimal("0.02"), RiskBand.LOW.multiplier)
+        assertEquals(BigDecimal("0.035"), RiskBand.MEDIUM.multiplier)
+        assertEquals(BigDecimal("0.05"), RiskBand.HIGH.multiplier)
     }
 
     // ── LoanDetails ───────────────────────────────────────────────────────
 
     @Test
     fun `LoanDetails - valid construction succeeds`() {
-        val details = LoanDetails(50000.0, 36, RiskBand.MEDIUM)
-        assertEquals(50000.0, details.loanAmount)
+        val details = LoanDetails(BigDecimal("50000.00"), 36, RiskBand.MEDIUM)
+        assertEquals(BigDecimal("50000.00"), details.loanAmount)
         assertEquals(36, details.loanTermMonths)
         assertEquals(RiskBand.MEDIUM, details.riskBand)
     }
@@ -57,28 +58,28 @@ class DomainModelTest {
     @Test
     fun `LoanDetails - throws when loanAmount is zero`() {
         assertThrows<IllegalArgumentException> {
-            LoanDetails(0.0, 36, RiskBand.LOW)
+            LoanDetails(BigDecimal.ZERO, 36, RiskBand.LOW)
         }
     }
 
     @Test
     fun `LoanDetails - throws when loanAmount is negative`() {
         assertThrows<IllegalArgumentException> {
-            LoanDetails(-100.0, 36, RiskBand.LOW)
+            LoanDetails(BigDecimal("-100.00"), 36, RiskBand.LOW)
         }
     }
 
     @Test
     fun `LoanDetails - throws when loanTermMonths is zero`() {
         assertThrows<IllegalArgumentException> {
-            LoanDetails(50000.0, 0, RiskBand.LOW)
+            LoanDetails(BigDecimal("50000.00"), 0, RiskBand.LOW)
         }
     }
 
     @Test
     fun `LoanDetails - throws when loanTermMonths is negative`() {
         assertThrows<IllegalArgumentException> {
-            LoanDetails(50000.0, -12, RiskBand.LOW)
+            LoanDetails(BigDecimal("50000.00"), -12, RiskBand.LOW)
         }
     }
 
@@ -88,48 +89,48 @@ class DomainModelTest {
 
     @Test
     fun `CommissionCalculator - medium risk 50000 over 36 months`() {
-        val details = LoanDetails(50000.0, 36, RiskBand.MEDIUM)
+        val details = LoanDetails(BigDecimal("50000.00"), 36, RiskBand.MEDIUM)
         val (commission, totalRepayable) = calculator.calculate(details)
-        // 50000 * 0.035 * (36/12.0) = 50000 * 0.035 * 3 = 5250.0
-        assertEquals(5250.0, commission, 0.001)
-        assertEquals(55250.0, totalRepayable, 0.001)
+        // 50000 * 0.035 * (36/12) = 50000 * 0.035 * 3 = 5250.00
+        assertEquals(BigDecimal("5250.00"), commission)
+        assertEquals(BigDecimal("55250.00"), totalRepayable)
     }
 
     @Test
     fun `CommissionCalculator - low risk 10000 over 12 months`() {
-        val details = LoanDetails(10000.0, 12, RiskBand.LOW)
+        val details = LoanDetails(BigDecimal("10000.00"), 12, RiskBand.LOW)
         val (commission, totalRepayable) = calculator.calculate(details)
-        // 10000 * 0.02 * 1 = 200.0
-        assertEquals(200.0, commission, 0.001)
-        assertEquals(10200.0, totalRepayable, 0.001)
+        // 10000 * 0.02 * 1 = 200.00
+        assertEquals(BigDecimal("200.00"), commission)
+        assertEquals(BigDecimal("10200.00"), totalRepayable)
     }
 
     @Test
     fun `CommissionCalculator - high risk 100000 over 24 months`() {
-        val details = LoanDetails(100000.0, 24, RiskBand.HIGH)
+        val details = LoanDetails(BigDecimal("100000.00"), 24, RiskBand.HIGH)
         val (commission, totalRepayable) = calculator.calculate(details)
-        // 100000 * 0.05 * 2 = 10000.0
-        assertEquals(10000.0, commission, 0.001)
-        assertEquals(110000.0, totalRepayable, 0.001)
+        // 100000 * 0.05 * 2 = 10000.00
+        assertEquals(BigDecimal("10000.00"), commission)
+        assertEquals(BigDecimal("110000.00"), totalRepayable)
     }
 
     @Test
     fun `CommissionCalculator - commission is positive`() {
-        val details = LoanDetails(1000.0, 1, RiskBand.LOW)
+        val details = LoanDetails(BigDecimal("1000.00"), 1, RiskBand.LOW)
         val (commission, _) = calculator.calculate(details)
-        assertTrue(commission > 0)
+        assertTrue(commission > BigDecimal.ZERO)
     }
 
     @Test
     fun `CommissionCalculator - totalRepayable is greater than loanAmount`() {
-        val details = LoanDetails(50000.0, 36, RiskBand.MEDIUM)
+        val details = LoanDetails(BigDecimal("50000.00"), 36, RiskBand.MEDIUM)
         val (_, totalRepayable) = calculator.calculate(details)
         assertTrue(totalRepayable > details.loanAmount)
     }
 
     @Test
     fun `CommissionCalculator - same inputs produce same result`() {
-        val details = LoanDetails(75000.0, 48, RiskBand.HIGH)
+        val details = LoanDetails(BigDecimal("75000.00"), 48, RiskBand.HIGH)
         val result1 = calculator.calculate(details)
         val result2 = calculator.calculate(details)
         assertEquals(result1, result2)
