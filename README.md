@@ -85,19 +85,29 @@ cp .env.example .env
 COMMISSION_API_KEY=your-api-key-here
 ```
 
-> In `dev` profile, the mock adapter is used and does not validate the API key at the adapter level. The key is still required by `QuoteApplicationService` to prevent misconfigured deployments.
+> In `dev` and `local` profiles, the mock adapter is used and does not validate the API key at the adapter level. The key is still required by `QuoteApplicationService` to prevent misconfigured deployments.
 
 ### Run locally
 
+Start each server in its own terminal:
+
 ```bash
-make dev
+# Terminal 1 — Spring Boot backend (dev profile, uses mock adapter)
+make server-dev
+
+# Terminal 2 — Vite dev server
+make client-dev
 ```
 
 This starts:
-- Spring Boot backend on `http://localhost:8080` (`dev` profile — uses mock adapter)
+- Spring Boot backend on `http://localhost:8080` (uses mock adapter)
 - Vite dev server on `http://localhost:5173` (proxies `/api/*` to backend)
 
 Open `http://localhost:5173` in your browser.
+
+> **Note:** `make dev` runs both targets sequentially in the same shell session,
+> which means the Vite server (launched first) blocks the terminal and the Spring Boot
+> server never starts. Run them in separate terminals as shown above.
 
 ---
 
