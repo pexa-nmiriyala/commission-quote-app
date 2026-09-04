@@ -18,6 +18,8 @@ import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.PostMapping
@@ -71,6 +73,18 @@ class QuoteController(
     fun generateQuote(
         @RequestBody @Valid request: QuoteRequest,
     ): ResponseEntity<QuoteResponse> {
+        val userId =
+            (SecurityContextHolder.getContext().authentication?.principal as? Jwt)
+                ?.subject ?: "unknown"
+
+        log.info(
+            "Quote request: userId={} loanAmount={} loanTermMonths={} riskBand={}",
+            userId,
+            request.loanAmount,
+            request.loanTermMonths,
+            request.riskBand,
+        )
+
         val loanDetails =
             LoanDetails(
                 loanAmount = request.loanAmount!!,
@@ -78,6 +92,15 @@ class QuoteController(
                 riskBand = RiskBand.from(request.riskBand!!),
             )
         val result = quoteUseCase.generateQuote(loanDetails)
+
+        log.info(
+            "Quote generated: userId={} quoteId={} commission={} totalRepayable={}",
+            userId,
+            result.quoteId,
+            result.commission,
+            result.totalRepayable,
+        )
+
         return ResponseEntity.ok(
             QuoteResponse(
                 quoteId = result.quoteId,

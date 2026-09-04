@@ -19,8 +19,11 @@ export function useQuote() {
         throw new Error('Session expired — redirecting to login');
       });
 
+      const correlationId = crypto.randomUUID();
+
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'X-Correlation-ID': correlationId,
       };
 
       // Attach Bearer token if available (will always be set when authenticated)
