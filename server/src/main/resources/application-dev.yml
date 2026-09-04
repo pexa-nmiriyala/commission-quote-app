@@ -1,0 +1,6 @@
+# Dev profile overrides
+# commission.api.url is NOT used in dev — MockCommissionApiAdapter is injected
+# directly via @Profile("dev"); no HTTP call is made to any external service.
+commission:
+  api:
+    url: http://localhost:8080/mock-unused

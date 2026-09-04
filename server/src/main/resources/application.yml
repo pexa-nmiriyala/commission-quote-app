@@ -1,0 +1,16 @@
+server:
+  port: 8080
+
+commission:
+  api:
+    url: https://api.example.com/commission-quote
+
+spring:
+  profiles:
+    active: dev
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs

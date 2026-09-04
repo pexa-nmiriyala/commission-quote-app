@@ -1,0 +1,42 @@
+# ── Server (Gradle / Spring Boot) ────────────────────────────────────────────
+server/build/
+server/.gradle/
+server/out/
+server/.jqwik-database
+
+# ── Client (Vite / Node) ──────────────────────────────────────────────────────
+client/node_modules/
+client/dist/
+client/dist-ssr/
+client/.vite/
+client/node_modules/.vite/
+client/test-results/
+client/playwright-report/
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.env.local
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+**/.DS_Store
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
