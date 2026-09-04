@@ -1,4 +1,4 @@
-.PHONY: dev dev-full dev-down test build e2e \
+.PHONY: dev dev-full dev-down check-prereqs test build e2e \
         client-dev client-test client-build \
         server-dev server-test server-build \
         docker-build docker-up docker-down docker-logs \
@@ -16,10 +16,38 @@ dev-down:
 	@lsof -ti:5173 | xargs kill -9 2>/dev/null || true
 	@echo "Done."
 
+## Check that required tools are installed and meet minimum version requirements.
+check-prereqs:
+	@echo "Checking prerequisites..."
+	@command -v java >/dev/null 2>&1 || { echo "❌ Java not found. Please install Java 21."; exit 1; }
+	@JAVA_VER=$$(java -version 2>&1 | awk -F'"' '/version/ {print $$2}' | cut -d'.' -f1); \
+	  if [ "$$JAVA_VER" -lt 21 ]; then \
+	    echo "❌ Java 21 required, found Java $$JAVA_VER. Please upgrade."; exit 1; \
+	  else \
+	    echo "✅ Java $$JAVA_VER"; \
+	  fi
+	@command -v node >/dev/null 2>&1 || { echo "❌ Node.js not found. Please install Node.js 20.19+ or 22.12+."; exit 1; }
+	@NODE_VER=$$(node -e "process.stdout.write(process.version.slice(1))"); \
+	  MAJOR=$$(echo $$NODE_VER | cut -d'.' -f1); \
+	  MINOR=$$(echo $$NODE_VER | cut -d'.' -f2); \
+	  OK=0; \
+	  if [ "$$MAJOR" -eq 20 ] && [ "$$MINOR" -ge 19 ]; then OK=1; fi; \
+	  if [ "$$MAJOR" -eq 22 ] && [ "$$MINOR" -ge 12 ]; then OK=1; fi; \
+	  if [ "$$MAJOR" -gt 22 ]; then OK=1; fi; \
+	  if [ "$$OK" -eq 0 ]; then \
+	    echo "❌ Node.js 20.19+ or 22.12+ required, found v$$NODE_VER. Please upgrade."; exit 1; \
+	  else \
+	    echo "✅ Node.js v$$NODE_VER"; \
+	  fi
+	@command -v docker >/dev/null 2>&1 || { echo "❌ Docker not found. Please install Docker."; exit 1; }
+	@docker info >/dev/null 2>&1 || { echo "❌ Docker is not running. Please start Docker."; exit 1; }
+	@echo "✅ Docker"
+	@echo "All prerequisites met."
+
 ## Start Keycloak (Docker), backend, and frontend in one command.
 ## Keycloak runs in Docker on port 9090; backend and frontend run on the host.
 ## Use Ctrl+C to stop the frontend/backend; then run 'make docker-down' to stop Keycloak.
-dev-full: dev-down
+dev-full: dev-down check-prereqs
 	@echo "Starting Keycloak..."
 	docker compose up -d keycloak
 	@echo "Waiting for Keycloak to be healthy..."
