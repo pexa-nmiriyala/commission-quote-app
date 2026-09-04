@@ -1,4 +1,4 @@
-.PHONY: dev test build e2e \
+.PHONY: dev dev-full test build e2e \
         client-dev client-test client-build \
         server-dev server-test server-build \
         docker-build docker-up docker-down docker-logs \
@@ -7,6 +7,20 @@
 # ── Local dev (no Docker) ────────────────────────────────────────────────────
 
 dev: client-dev server-dev
+
+## Start Keycloak (Docker), backend, and frontend in one command.
+## Keycloak runs in Docker on port 9090; backend and frontend run on the host.
+## Use Ctrl+C to stop the frontend/backend; then run 'make docker-down' to stop Keycloak.
+dev-full:
+	@echo "Starting Keycloak..."
+	docker compose up -d keycloak
+	@echo "Waiting for Keycloak to be healthy..."
+	@until docker compose ps keycloak | grep -q "healthy"; do sleep 2; done
+	@echo "Keycloak ready."
+	@echo "Starting backend..."
+	set -a && [ -f .env ] && . ./.env; set +a; cd server && SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun &
+	@echo "Starting frontend..."
+	cd client && npm run dev
 
 test: client-test server-test
 
@@ -30,7 +44,7 @@ client-build:
 # ── Server (Spring Boot + Kotlin + Gradle) ──────────────────────────────────
 
 server-dev:
-	cd server && SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
+	set -a && [ -f ../.env ] && . ../.env; set +a; cd server && SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
 
 server-test:
 	cd server && ./gradlew test

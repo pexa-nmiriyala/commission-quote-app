@@ -51,6 +51,12 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
+      args:
+        # Keycloak URL must be reachable from the user's browser — use the
+        # host-mapped port (9090), not the internal Docker network address.
+        VITE_KEYCLOAK_URL: ${KEYCLOAK_PUBLIC_URL:-http://localhost:9090}
+        VITE_KEYCLOAK_REALM: ${KEYCLOAK_REALM:-commission-app}
+        VITE_KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-commission-app-client}
     ports:
       - "80:80"
     depends_on:

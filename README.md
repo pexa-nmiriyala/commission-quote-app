@@ -36,10 +36,12 @@ commission-quote-app/
 ├── client/                          # React (Vite) frontend
 │   ├── src/
 │   │   ├── components/              # QuoteForm, QuoteResult, ErrorMessage, LoadingIndicator
+│   │   ├── auth/                    # AuthProvider, AuthContext (Keycloak integration)
 │   │   ├── App.tsx                  # Root component
 │   │   ├── useQuote.ts              # State management hook
 │   │   ├── validation.ts            # Client-side form validation
 │   │   ├── formatCurrency.ts        # AUD currency formatter
+│   │   ├── keycloak.ts              # Keycloak JS client instance
 │   │   └── types.ts                 # Shared TypeScript interfaces
 │   ├── e2e/                         # Playwright E2E tests
 │   ├── playwright.config.ts
@@ -81,17 +83,44 @@ Copy `.env.example` and set your API key:
 cp .env.example .env
 ```
 
+At minimum, set `COMMISSION_API_KEY`. The other variables have sensible defaults for local dev with Docker:
+
 ```
+# Required in all environments
 COMMISSION_API_KEY=your-api-key-here
+
+# Keycloak admin credentials (docker-compose)
+KEYCLOAK_ADMIN=admin
+KEYCLOAK_ADMIN_PASSWORD=admin
+
+# Spring Boot OAuth2 resource server — issuer URI for JWT validation
+KEYCLOAK_ISSUER_URI=http://localhost:9090/realms/commission-app
+
+# OAuth2 client used by Swagger UI
+KEYCLOAK_CLIENT_ID=commission-app-client
+KEYCLOAK_REALM=commission-app
+
+# Public Keycloak URL reachable from the browser (baked into frontend at build time)
+KEYCLOAK_PUBLIC_URL=http://localhost:9090
 ```
 
 > In `dev` and `local` profiles, the mock adapter is used and does not validate the API key at the adapter level. The key is still required by `QuoteApplicationService` to prevent misconfigured deployments.
 
 ### Run locally
 
-Start each server in its own terminal:
+To start everything (Keycloak + backend + frontend) with a single command:
 
 ```bash
+make dev-full
+```
+
+This starts Keycloak in Docker (port 9090), then the Spring Boot backend and Vite dev server on the host. Press `Ctrl+C` to stop the frontend/backend, then run `make docker-down` to stop Keycloak.
+
+Alternatively, start each piece in its own terminal:
+
+```bash
+make docker-up    # Terminal 0 — Keycloak only (or skip for mock auth)
+
 # Terminal 1 — Spring Boot backend (dev profile, uses mock adapter)
 make server-dev
 
@@ -142,7 +171,7 @@ Content-Type: application/json
 }
 ```
 
-**Security:** Requests require an `api-key` header. The key is injected server-side from the `COMMISSION_API_KEY` environment variable — it is never sent to the browser.
+**Security:** Requests require an `Authorization: Bearer <token>` header (OAuth2 / JWT issued by Keycloak). The `COMMISSION_API_KEY` is an internal server-to-upstream secret injected server-side — it is never sent to the browser.
 
 ### Commission formula (mock)
 
@@ -215,10 +244,9 @@ The Swagger UI at `http://localhost:8080/swagger-ui.html` has an OAuth2 login bu
 
 ---
 
-
+## Running with Docker
 
 ### Prerequisites
-- Docker 24+ and Docker Compose v2
 - Java 21 and Node.js 20+ (required for the host build step — see below)
 
 ### How the Docker build works
@@ -307,10 +335,10 @@ make e2e
 | Application service (QuoteApplicationService) | 5 |
 | Mock adapter (MockCommissionApiAdapter) | 6 |
 | Controller (@WebMvcTest) | 10 |
-| Integration (@SpringBootTest, dev profile) | 3 |
+| Integration (@SpringBootTest, dev profile) | 8 |
 | Frontend — validation, formatting, hook, components | 53 |
-| E2E (Playwright) | 5 |
-| **Total** | **98** |
+| E2E (Playwright) | 6 |
+| **Total** | **104** |
 
 ---
 
