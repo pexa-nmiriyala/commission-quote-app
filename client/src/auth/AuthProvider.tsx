@@ -6,21 +6,20 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Module-level flag that persists across React StrictMode double-invocations.
+// Keycloak's JS adapter throws if init() is called more than once on the same instance.
+let keycloakInitialized = false;
+
 export function AuthProvider({ children }: AuthProviderProps) {
-  // Seed initial state from the keycloak instance so that if init() has already
-  // run (React StrictMode double-invokes effects), the state is correct on mount
-  // without needing to call setState synchronously inside the effect.
   const [isAuthenticated, setIsAuthenticated] = useState(() => keycloak.authenticated ?? false);
-  const [isLoading, setIsLoading] = useState(() => !keycloak.didInitialize);
+  const [isLoading, setIsLoading] = useState(() => !keycloakInitialized);
 
   useEffect(() => {
-    // Keycloak's JS adapter throws if init() is called more than once on the
-    // same instance. React StrictMode mounts effects twice in development, so
-    // we guard with the didInitialize flag that persists across re-mounts.
-    if (keycloak.didInitialize) {
+    if (keycloakInitialized) {
       return;
     }
 
+    keycloakInitialized = true;
     keycloak
       .init({
         // 'check-sso' silently checks for an existing session without redirecting.
