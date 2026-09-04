@@ -12,12 +12,14 @@ client/.vite/
 client/node_modules/.vite/
 client/test-results/
 client/playwright-report/
+client/e2e/.auth/
 
 # ── Environment / secrets ─────────────────────────────────────────────────────
 .env
 .env.local
 .env.*.local
 *.env.local
+client/.env
 
 # ── macOS ─────────────────────────────────────────────────────────────────────
 .DS_Store

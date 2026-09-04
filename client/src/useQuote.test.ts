@@ -1,6 +1,15 @@
 import { renderHook, act } from '@testing-library/react';
 import { useQuote } from './useQuote';
 
+// Hoist so both useQuote and any imported modules share the same mock instance.
+const mockKeycloak = vi.hoisted(() => ({
+  token: 'mock-test-token',
+  updateToken: vi.fn().mockResolvedValue(true),
+  login: vi.fn(),
+}));
+
+vi.mock('./keycloak', () => ({ default: mockKeycloak }));
+
 const mockLoanDetails = {
   loanAmount: 50000,
   loanTermMonths: 36,
@@ -15,7 +24,9 @@ const mockQuoteResult = {
 
 describe('useQuote', () => {
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
+    // Restore updateToken default after clearAllMocks
+    mockKeycloak.updateToken.mockResolvedValue(true);
   });
 
   it('starts in idle state', () => {
@@ -91,10 +102,14 @@ describe('useQuote', () => {
 
     const { result } = renderHook(() => useQuote());
 
-    await act(async () => { await result.current.submitQuote(mockLoanDetails); });
+    await act(async () => {
+      await result.current.submitQuote(mockLoanDetails);
+    });
     expect(result.current.status).toBe('error');
 
-    await act(async () => { await result.current.submitQuote(mockLoanDetails); });
+    await act(async () => {
+      await result.current.submitQuote(mockLoanDetails);
+    });
     expect(result.current.status).toBe('success');
     expect(result.current.errorMessage).toBeNull();
     expect(result.current.quoteResult).toEqual(mockQuoteResult);
@@ -107,7 +122,9 @@ describe('useQuote', () => {
     } as Response);
 
     const { result } = renderHook(() => useQuote());
-    await act(async () => { await result.current.submitQuote(mockLoanDetails); });
+    await act(async () => {
+      await result.current.submitQuote(mockLoanDetails);
+    });
 
     const { quoteResult, errorMessage } = result.current;
     expect(quoteResult !== null && errorMessage !== null).toBe(false);

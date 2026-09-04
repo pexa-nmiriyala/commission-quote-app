@@ -10,12 +10,12 @@ const mockResult = {
 describe('QuoteResult', () => {
   it('renders the quoteId', () => {
     render(<QuoteResult quoteResult={mockResult} />);
-    expect(screen.getByText('abc-123')).toBeInTheDocument();
+    // quoteId is rendered as "ID: abc-123"
+    expect(screen.getByText(/abc-123/)).toBeInTheDocument();
   });
 
   it('renders formatted commission as AUD currency', () => {
     render(<QuoteResult quoteResult={mockResult} />);
-    // $5,250.00 — match exactly the commission value, not the totalRepayable
     expect(screen.getByText(/^\$5[,.]?250/)).toBeInTheDocument();
   });
 
@@ -26,8 +26,8 @@ describe('QuoteResult', () => {
 
   it('renders all three data labels', () => {
     render(<QuoteResult quoteResult={mockResult} />);
-    expect(screen.getByText(/quote id/i)).toBeInTheDocument();
-    // Use exact dt label, not the heading which also contains "Commission"
+    // "Quote Generated" heading is in the header
+    expect(screen.getByText(/quote generated/i)).toBeInTheDocument();
     expect(screen.getByText('Commission')).toBeInTheDocument();
     expect(screen.getByText(/total repayable/i)).toBeInTheDocument();
   });
