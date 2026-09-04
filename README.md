@@ -63,7 +63,7 @@ commission-quote-app/
 
 ### Prerequisites
 
-- Java 21, Node.js 20+, Docker
+- Java 21, Node.js 20.19+ or 22.12+, Docker
 
 ### Environment variables
 
@@ -169,14 +169,24 @@ E2E tests run via Playwright. Two modes are available depending on your setup.
 **Local dev stack** — requires servers to be running first:
 
 ```bash
+# Terminal 1
 make dev-full       # start Keycloak (Docker), backend, and frontend
+```
+
+```bash
+# Terminal 2
 make e2e            # run Playwright against http://localhost:5173
 ```
 
 **Docker stack** — requires the full Docker stack to be up first:
 
 ```bash
+# Terminal 1
 make docker-up      # start all services in Docker
+```
+
+```bash
+# Terminal 2
 make docker-e2e     # run Playwright against http://localhost:80
 ```
 
@@ -188,8 +198,8 @@ make docker-e2e     # run Playwright against http://localhost:80
 | Controller (@WebMvcTest) | 10 |
 | Integration (@SpringBootTest, dev profile) | 8 |
 | Frontend — validation, formatting, hook, components | 53 |
-| E2E (Playwright) | 6 |
-| **Total** | **104** |
+| E2E (Playwright) | 7 |
+| **Total** | **105** |
 
 ---
 

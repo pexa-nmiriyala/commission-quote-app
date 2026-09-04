@@ -25,6 +25,8 @@ dev-full: dev-down
 	@echo "Waiting for Keycloak to be healthy..."
 	@until docker compose ps keycloak | grep -q "healthy"; do sleep 2; done
 	@echo "Keycloak ready."
+	@echo "Installing frontend dependencies..."
+	cd client && npm install
 	@echo "Starting backend (logs → /tmp/server.log)..."
 	set -a && [ -f .env ] && . ./.env; set +a; cd server && SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun > /tmp/server.log 2>&1 &
 	@echo "Starting frontend..."
