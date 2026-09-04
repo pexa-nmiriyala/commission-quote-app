@@ -616,108 +616,14 @@ data class ErrorResponse(
 
 `ErrorResponse` lives in the adapter layer alongside `QuoteRequest` and `QuoteResponse`. The domain layer has zero dependency on OpenAPI/Swagger libraries.
 
-### Static `openapi.yaml` (Contract-First Source of Truth)
+### API Spec (Annotation-Driven)
 
-A hand-authored OpenAPI 3.0 YAML file lives at `server/src/main/resources/openapi.yaml`. This file serves as the **contract-first source of truth** and is committed to the repository so that consumers can validate against it without running the server.
+The OpenAPI spec is generated at runtime by SpringDoc from `@Schema`, `@Operation`, and `@ApiResponses` annotations on the controller and DTOs. There is no hand-maintained `openapi.yaml` file — the annotations are the source of truth.
 
-The auto-generated spec at `/v3/api-docs.yaml` MUST be validated against `openapi.yaml` in CI to detect drift. A `diff` step or a dedicated schema-comparison tool (e.g. `openapi-diff`) can be used for this check.
-
-The full content of `openapi.yaml` is:
-
-```yaml
-openapi: "3.0.3"
-info:
-  title: Commission Quote API
-  version: "1.0.0"
-  description: Backend proxy for generating commission quotes on loan applications
-paths:
-  /api/commission-quote:
-    post:
-      summary: Generate a commission quote
-      tags: [Quote]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/QuoteRequest'
-      responses:
-        '200':
-          description: Quote generated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/QuoteResponse'
-        '400':
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorised
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Server configuration error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '502':
-          description: Commission API error or invalid response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '504':
-          description: Commission API timed out
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-components:
-  schemas:
-    QuoteRequest:
-      type: object
-      required: [loanAmount, loanTermMonths, riskBand]
-      properties:
-        loanAmount:
-          type: number
-          format: double
-          minimum: 0.01
-          example: 50000.0
-        loanTermMonths:
-          type: integer
-          minimum: 1
-          example: 36
-        riskBand:
-          type: string
-          enum: [low, medium, high]
-          example: medium
-    QuoteResponse:
-      type: object
-      properties:
-        quoteId:
-          type: string
-          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-        commission:
-          type: number
-          format: double
-          example: 583.33
-        totalRepayable:
-          type: number
-          format: double
-          example: 50583.33
-    ErrorResponse:
-      type: object
-      properties:
-        error:
-          type: string
-          example: "Invalid riskBand: unknown"
-```
+The live spec is available at:
+- JSON: `http://localhost:8080/v3/api-docs`
+- YAML: `http://localhost:8080/v3/api-docs.yaml`
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
 
 ---
 
