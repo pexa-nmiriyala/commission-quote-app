@@ -54,7 +54,9 @@ test('shows login button when not authenticated', async ({ browser }) => {
   const page = await context.newPage();
 
   await page.goto('/');
-  await expect(page.getByRole('button', { name: /log in/i })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('button', { name: /sign in with sso/i })).toBeVisible({
+    timeout: 15_000,
+  });
   await expect(page.getByLabel(/loan amount/i)).not.toBeVisible();
 
   await context.close();
