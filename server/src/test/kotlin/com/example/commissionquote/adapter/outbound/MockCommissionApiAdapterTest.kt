@@ -1,7 +1,7 @@
 package com.example.commissionquote.adapter.outbound
 
+import com.example.commissionquote.adapter.outbound.http.UpstreamApiException
 import com.example.commissionquote.adapter.outbound.mock.MockCommissionApiAdapter
-import com.example.commissionquote.adapter.outbound.mock.UpstreamApiException
 import com.example.commissionquote.domain.model.LoanDetails
 import com.example.commissionquote.domain.model.RiskBand
 import com.example.commissionquote.domain.service.CommissionCalculator
@@ -9,10 +9,11 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 
 class MockCommissionApiAdapterTest {
     private val calculator = CommissionCalculator()
-    private val details = LoanDetails(50000.0, 36, RiskBand.MEDIUM)
+    private val details = LoanDetails(BigDecimal("50000.00"), 36, RiskBand.MEDIUM)
 
     @Test
     fun `fetchQuote - returns QuoteResult with non-blank quoteId`() {
@@ -31,7 +32,7 @@ class MockCommissionApiAdapterTest {
 
     @Test
     fun `fetchQuote - commission is positive on success`() {
-        var commission: Double? = null
+        var commission: BigDecimal? = null
         repeat(20) {
             try {
                 commission = MockCommissionApiAdapter(calculator).fetchQuote(details).commission
@@ -40,12 +41,12 @@ class MockCommissionApiAdapterTest {
             }
         }
         assertNotNull(commission)
-        assertTrue(commission!! > 0)
+        assertTrue(commission!! > BigDecimal.ZERO)
     }
 
     @Test
     fun `fetchQuote - totalRepayable is greater than loanAmount on success`() {
-        var totalRepayable: Double? = null
+        var totalRepayable: BigDecimal? = null
         repeat(20) {
             try {
                 totalRepayable = MockCommissionApiAdapter(calculator).fetchQuote(details).totalRepayable
@@ -69,8 +70,8 @@ class MockCommissionApiAdapterTest {
             }
         }
         assertNotNull(result)
-        assertEquals(expectedCommission, result!!.commission, 0.001)
-        assertEquals(expectedTotal, result!!.totalRepayable, 0.001)
+        assertEquals(expectedCommission, result!!.commission)
+        assertEquals(expectedTotal, result!!.totalRepayable)
     }
 
     @Test

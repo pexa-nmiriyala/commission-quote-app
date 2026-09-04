@@ -1,7 +1,9 @@
 package com.example.commissionquote.domain.model
 
+import java.math.BigDecimal
+
 data class QuoteResult(
     val quoteId: String,
-    val commission: Double,
-    val totalRepayable: Double,
+    val commission: BigDecimal,
+    val totalRepayable: BigDecimal,
 )

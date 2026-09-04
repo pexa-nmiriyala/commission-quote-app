@@ -3,7 +3,7 @@ package com.example.commissionquote.adapter.inbound.web
 import com.example.commissionquote.adapter.outbound.http.CommissionApiTimeoutException
 import com.example.commissionquote.adapter.outbound.http.InvalidResponseException
 import com.example.commissionquote.adapter.outbound.http.UnauthorisedException
-import com.example.commissionquote.adapter.outbound.mock.UpstreamApiException
+import com.example.commissionquote.adapter.outbound.http.UpstreamApiException
 import com.example.commissionquote.application.ConfigurationException
 import com.example.commissionquote.domain.model.QuoteResult
 import com.example.commissionquote.domain.port.inbound.QuoteUseCase
@@ -19,6 +19,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
+import java.math.BigDecimal
 
 @WebMvcTest(QuoteController::class)
 // Import SecurityConfig so the @WebMvcTest slice uses the real security rules
@@ -37,11 +38,12 @@ class QuoteControllerTest {
     @MockkBean
     private lateinit var quoteUseCase: QuoteUseCase
 
-    private val validRequestBody = """{"loanAmount": 50000.0, "loanTermMonths": 36, "riskBand": "medium"}"""
+    private val validRequestBody = """{"loanAmount": 50000.00, "loanTermMonths": 36, "riskBand": "medium"}"""
 
     @Test
     fun `POST commission-quote - valid request returns 200 with QuoteResponse`() {
-        every { quoteUseCase.generateQuote(any()) } returns QuoteResult("q-001", 5250.0, 55250.0)
+        every { quoteUseCase.generateQuote(any()) } returns
+            QuoteResult("q-001", BigDecimal("5250.00"), BigDecimal("55250.00"))
 
         mockMvc
             .post("/api/commission-quote") {
@@ -50,8 +52,8 @@ class QuoteControllerTest {
             }.andExpect {
                 status { isOk() }
                 jsonPath("$.quoteId") { value("q-001") }
-                jsonPath("$.commission") { value(5250.0) }
-                jsonPath("$.totalRepayable") { value(55250.0) }
+                jsonPath("$.commission") { value("5250.00") }
+                jsonPath("$.totalRepayable") { value("55250.00") }
             }
     }
 
@@ -71,7 +73,7 @@ class QuoteControllerTest {
         mockMvc
             .post("/api/commission-quote") {
                 contentType = MediaType.APPLICATION_JSON
-                content = """{"loanAmount": -100.0, "loanTermMonths": 36, "riskBand": "medium"}"""
+                content = """{"loanAmount": -100.00, "loanTermMonths": 36, "riskBand": "medium"}"""
             }.andExpect {
                 status { isBadRequest() }
             }
@@ -82,7 +84,7 @@ class QuoteControllerTest {
         mockMvc
             .post("/api/commission-quote") {
                 contentType = MediaType.APPLICATION_JSON
-                content = """{"loanAmount": 50000.0, "riskBand": "medium"}"""
+                content = """{"loanAmount": 50000.00, "riskBand": "medium"}"""
             }.andExpect {
                 status { isBadRequest() }
             }
@@ -95,7 +97,7 @@ class QuoteControllerTest {
         mockMvc
             .post("/api/commission-quote") {
                 contentType = MediaType.APPLICATION_JSON
-                content = """{"loanAmount": 50000.0, "loanTermMonths": 36, "riskBand": "unknown"}"""
+                content = """{"loanAmount": 50000.00, "loanTermMonths": 36, "riskBand": "unknown"}"""
             }.andExpect {
                 status { isBadRequest() }
                 jsonPath("$.error") { isNotEmpty() }

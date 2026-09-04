@@ -6,8 +6,6 @@ commission:
     url: https://api.example.com/commission-quote
 
 spring:
-  profiles:
-    active: dev
   security:
     oauth2:
       resourceserver:

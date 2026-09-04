@@ -1,5 +1,6 @@
 package com.example.commissionquote.adapter.outbound.mock
 
+import com.example.commissionquote.adapter.outbound.http.UpstreamApiException
 import com.example.commissionquote.domain.model.LoanDetails
 import com.example.commissionquote.domain.model.QuoteResult
 import com.example.commissionquote.domain.port.outbound.CommissionApiPort
@@ -7,10 +8,6 @@ import com.example.commissionquote.domain.service.CommissionCalculator
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.util.UUID
-
-class UpstreamApiException(
-    message: String,
-) : RuntimeException(message)
 
 @Profile("dev", "local")
 @Service
